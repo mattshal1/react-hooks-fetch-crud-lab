@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function QuestionForm(props) {
+function QuestionForm({ onAddItem }) {
   const [formData, setFormData] = useState({
     prompt: "",
     answer1: "",
@@ -8,18 +8,44 @@ function QuestionForm(props) {
     answer3: "",
     answer4: "",
     correctIndex: 0,
+    answers: [],
   });
 
   function handleChange(event) {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
+    const { name, value } = event.target;
+    setFormData((prevData) => {
+      return {
+        ...prevData,
+        [name]: value,
+      };
     });
   }
 
   function handleSubmit(event) {
+    const { name, value } = event.target;
     event.preventDefault();
-    console.log(formData);
+    setFormData((prevData) => {
+      if (name.startsWith("answer")) {
+        return {
+          ...prevData,
+          answers: [...prevData.answers, {[name]: value}],
+        };
+      } else {
+        return {
+          ...prevData,
+          [name]: value,
+        };
+      }
+    });
+    fetch("http://localhost:4000/questions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((r) => r.json())
+      .then((newItem) => onAddItem(newItem));
   }
 
   return (
